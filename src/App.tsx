@@ -38,6 +38,7 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
   initialItems: T[];
 }) {
   const edge = 100;
+  const scrollDelay = 500;
   const [items, setItems] = useState<T[]>(initialItems);
   const isDragging = useRef(false);
   const [activeItem, setActiveItem] = useState(null);
@@ -50,7 +51,7 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
 
     if (isDragging.current && cursorY.current > scrollArea.current.bottom - edge && scrollArea.current.bottom > 100) {
       window.scroll({ top: window.scrollY + 280, behavior: 'smooth' })
-
+      console.log('scroll down')
       scrollDownThrottle()
     }
   }
@@ -59,8 +60,8 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
     window.scroll({ top: window.scrollY - 280, behavior: 'smooth' })
   }
 
-  const scrollUpThrottle = useMemo(() => throttle(scrollUp, 500), []);
-  const scrollDownThrottle = useMemo(() => debounce(scrollDown, 500), []);
+  const scrollUpThrottle = useMemo(() => throttle(scrollUp, scrollDelay), []);
+  const scrollDownThrottle = useMemo(() => debounce(scrollDown, scrollDelay), []);
   const cursorY = useRef(0)
   const animationFrameId = useRef()
   const el = useRef()

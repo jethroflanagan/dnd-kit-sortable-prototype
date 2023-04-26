@@ -37,34 +37,15 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
 }: {
   initialItems: T[];
 }) {
-  const edge = 100;
-  const scrollDelay = 500;
+  const EDGE = 100
   const [items, setItems] = useState<T[]>(initialItems);
-  const isDragging = useRef(false);
   const [activeItem, setActiveItem] = useState(null);
-  const { width: windowWidth, height: windowHeight } = useWindowSize();
-  const scrollArea = useRef({ top: 0, bottom: 1 })
-  const scrollY = useRef(0)
-  const scrollDown = () => {
-    // console.log('scrollDown', cursorY.current, scrollArea.current.bottom)
-    scrollDownThrottle.cancel()
-
-    if (isDragging.current && cursorY.current > scrollArea.current.bottom - edge && scrollArea.current.bottom > 100) {
-      window.scroll({ top: window.scrollY + 280, behavior: 'smooth' })
-      console.log('scroll down')
-      scrollDownThrottle()
-    }
-  }
-  const scrollUp = () => {
-    console.log('scrollUp')
-    window.scroll({ top: window.scrollY - 280, behavior: 'smooth' })
-  }
-
-  const scrollUpThrottle = useMemo(() => throttle(scrollUp, scrollDelay), []);
-  const scrollDownThrottle = useMemo(() => debounce(scrollDown, scrollDelay), []);
-  const cursorY = useRef(0)
-  const animationFrameId = useRef()
+  const [isDragging, setDragging] = useState(false);
+  const { width: windowWidth, height: windowHeight } = useWindowSize()
+  const scrollDirection = useRef(0)
   const el = useRef()
+  const scrollAmount = useRef(0)
+
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
     useSensor(TouchSensor, {
@@ -81,9 +62,9 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
   const isLarge = useMediaQuery('(min-width: 700px)');
 
   const onDragEnd = (event) => {
-    scrollDownThrottle.cancel()
-    isDragging.current = false
     setActiveItem(null)
+
+    scrollDirection.current = 0;
     const { active, over } = event;
     if (active.id !== over.id) {
       setItems((items) => {
@@ -97,79 +78,59 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
 
   const onDragStart = ({ active: { id } }) => {
     setActiveItem(items.find((item) => item.id === id));
-    isDragging.current = true
   }
-  // const draggingCb = useCallback(() => {
-  //
-  //   const y = cursorY.current;
-  //
-  //   if (y > screen.height - 100) {
-  //     scrollDownThrottle();
-  //   }
-  //
-  //   else if (y < 100) {
-  //     scrollUpThrottle();
-  //   }
-  //   animationFrameId.current = requestAnimationFrame(draggingCb)
-  //
-  // }, [])
-  //
-  // useEffect(() => {
-  //   if (!isDragging) {
-  //     scrollUpThrottle.cancel();
-  //     scrollDownThrottle.cancel();
-  //     cancelAnimationFrame(animationFrameId.current)
-  //     return;
-  //   }
-  //
-  //   animationFrameId.current = requestAnimationFrame(draggingCb);
-  //   () => {
-  //     cancelAnimationFrame(animationFrameId.current)
-  //   }
-  // }, [isDragging])
-  const setupScrollArea = () => {
-    const top = Math.max(0, el.current.offsetTop - window.scrollY)
-    const bottom = Math.min(window.innerHeight, el.current.offsetHeight + el.current.offsetTop - window.scrollY)
-    // console.log(top, bottom, el.current.offsetHeight + el.current.offsetTop - window.scrollY)
-    scrollArea.current = { top, bottom }
-  }
-  // const updateCursor = useCallback((e) => {
-  //   // cursorY.current = e.delta.y
-  //   // const scrollOffset = Math.max(0, 80 - window.scrollY)
-  //   const position = e.delta.y + e.activatorEvent.touches[0].clientY
-  //   // console.log(`touch ${position} window ${window.scrollY} bottom ${bottom} top ${top}`)
-  //   cursorY.current = position;
-  //   // console.log(position, scrollArea.current.bottom)
-  //   console.log('cursor', e.delta.y)
-  //   if (cursorY.current > scrollArea.current.bottom - edge) {
-  //     scrollDownThrottle()
-  //   }
-  // }, [el, scrollArea])
+  const debounceScroll = useCallback(debounce(() => {
+    debounceScroll.cancel();
+    if (scrollDirection.current) {
+      console.log(Date.now(), 'scroll')
+      const speed = scrollAmount.current;
+      window.scrollTo({
+        top: window.scrollY + scrollDirection.current * speed,
+        behavior: 'smooth'
+      })
+    }
+    scroll()
+  }, 500));
+
+  const scroll = useCallback(debounceScroll)
 
   useEffect(() => {
-    const onScroll = () => {
-      scrollY.current = window.scrollY
-      setupScrollArea()
-    }
-    const onMoveCursor = (e) => {
-      cursorY.current = e.pageY
-      if (cursorY.current > scrollArea.current.bottom - edge) {
-        scrollDownThrottle()
+    const preventScroll = (e) => {
+      e.preventDefault()
+
+      const cursorY = e.touches[0].clientY;
+
+      if (cursorY < EDGE) {
+        scrollDirection.current = -1;
+      } else if (cursorY > window.innerHeight - EDGE) {
+        scrollDirection.current = 1;
       }
-
+      else {
+        scrollDirection.current = 0;
+      }
     }
-    window.addEventListener('scroll', onScroll)
-    window.addEventListener('pointermove', onMoveCursor)
 
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('pointermove', onMoveCursor)
+    if (activeItem != null) {
+      document.addEventListener('touchmove', preventScroll, { passive: false })
+      setupSize()
     }
-  }, [])
+    else {
+      document.removeEventListener('touchmove', preventScroll)
+    }
+
+    return () => document.removeEventListener('touchmove', preventScroll)
+  }, [activeItem])
+
+  const setupSize = () => {
+
+    const child = el.current?.querySelector('div:first-child')
+    scrollAmount.current = child.offsetHeight + 30; // gap
+    console.log('scroll', scrollAmount.current)
+  }
   useEffect(() => {
-    setupScrollArea()
-  }, [windowWidth, windowHeight])
-  useEffect(() => setupScrollArea(), [])
+    scroll()
+  }, [])
+
 
 
   return (
@@ -178,7 +139,6 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
       collisionDetection={closestCenter}
       onDragStart={onDragStart}
       autoScroll={false}
-      // onDragMove={updateCursor}
       onDragEnd={onDragEnd}
       modifiers={isLarge ? [] : [restrictToVerticalAxis]}
     >
@@ -194,7 +154,6 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
               <GalleryImage item={item} ghost={item.id === activeItem?.id} />
             </SortableItem>
           ))}
-
           <Overlay item={activeItem} />
         </SortableContext>
       </div>
@@ -205,7 +164,7 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
 
 export default function App() {
   return (
-    <div onContextMenu={() => { }}>
+    <div onContextMenu={() => { }} className={styles.scroll}>
       <div className={styles.placeholder} />
       <SortablePhotos initialItems={images} />
       <div className={styles.placeholder2} />

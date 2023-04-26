@@ -5,6 +5,7 @@ import { ReactNode } from 'react';
 
 export type SortableItemProps = {
   id: UniqueIdentifier;
+  ghost: boolean;
   children: ReactNode;
 };
 
@@ -23,7 +24,7 @@ export function SortableItem(props: SortableItemProps) {
       style={style}
       {...attributes}
       {...listeners}
-      onContextMenu={() => {}}
+      onContextMenu={() => { }}
     >
       {props.children}
     </div>

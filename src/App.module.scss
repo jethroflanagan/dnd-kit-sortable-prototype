@@ -4,3 +4,18 @@
 .placeholder2 {
   height: 420px;
 }
+
+.scroll {
+  // transform: translate3d(0, 0, 0.1px);
+
+  // animation: scroll-up 3s linear infinite;
+}
+
+@keyframes scroll-up {
+  0% {
+  transform: translate3d(0, 0, 0.1px);
+}
+  100% {
+  transform: translate3d(0, -600px, 0.1px);
+}
+}

@@ -6,8 +6,7 @@ p {
 .image-grid {
   display: flex;
   flex-direction: column;
-  margin: 30vh 2rem;
-  gap: 2rem;
+  gap: 30px;
   max-width: 1200px;
 }
 
@@ -34,20 +33,6 @@ p {
 }
 .image-grid > :nth-child(3) {
   grid-area: tertiary;
-}
-
-.img {
-  outline: 2px solid #fff;
-  outline-offset: -2px;
-  display: flex;
-  border-radius: 8px;
-  cursor: grab;
-}
-
-.img img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
 }
 
 @media (min-width: 700px) {

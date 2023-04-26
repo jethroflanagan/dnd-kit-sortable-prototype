@@ -2,6 +2,7 @@ import { useMediaQuery, useWindowSize } from 'usehooks-ts';
 import styles from './App.module.scss'
 import { images } from './data';
 import throttle from 'lodash.throttle';
+import debounce from 'lodash.debounce';
 import {
   DndContext,
   DragOverlay,
@@ -36,15 +37,22 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
 }: {
   initialItems: T[];
 }) {
+  const edge = 100;
   const [items, setItems] = useState<T[]>(initialItems);
-  const [isDragging, setDragging] = useState(false);
+  const isDragging = useRef(false);
   const [activeItem, setActiveItem] = useState(null);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
-  const [scrollArea, setScrollArea] = useState({ top: 0, bottom: 1 })
+  const scrollArea = useRef({ top: 0, bottom: 1 })
   const scrollY = useRef(0)
   const scrollDown = () => {
-    console.log('scrollDown')
-    window.scroll({ top: window.scrollY + 280, behavior: 'smooth' })
+    // console.log('scrollDown', cursorY.current, scrollArea.current.bottom)
+    scrollDownThrottle.cancel()
+
+    if (isDragging.current && cursorY.current > scrollArea.current.bottom - edge && scrollArea.current.bottom > 100) {
+      window.scroll({ top: window.scrollY + 280, behavior: 'smooth' })
+
+      scrollDownThrottle()
+    }
   }
   const scrollUp = () => {
     console.log('scrollUp')
@@ -52,7 +60,7 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
   }
 
   const scrollUpThrottle = useMemo(() => throttle(scrollUp, 500), []);
-  const scrollDownThrottle = useMemo(() => throttle(scrollDown, 500), []);
+  const scrollDownThrottle = useMemo(() => debounce(scrollDown, 500), []);
   const cursorY = useRef(0)
   const animationFrameId = useRef()
   const el = useRef()
@@ -72,7 +80,8 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
   const isLarge = useMediaQuery('(min-width: 700px)');
 
   const onDragEnd = (event) => {
-    setDragging(false)
+    scrollDownThrottle.cancel()
+    isDragging.current = false
     setActiveItem(null)
     const { active, over } = event;
     if (active.id !== over.id) {
@@ -87,7 +96,7 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
 
   const onDragStart = ({ active: { id } }) => {
     setActiveItem(items.find((item) => item.id === id));
-    setDragging(true)
+    isDragging.current = true
   }
   // const draggingCb = useCallback(() => {
   //
@@ -120,31 +129,46 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
   const setupScrollArea = () => {
     const top = Math.max(0, el.current.offsetTop - window.scrollY)
     const bottom = Math.min(window.innerHeight, el.current.offsetHeight + el.current.offsetTop - window.scrollY)
-    console.log(top, bottom, el.current.offsetHeight + el.current.offsetTop - window.scrollY)
-    setScrollArea({ top, bottom })
+    // console.log(top, bottom, el.current.offsetHeight + el.current.offsetTop - window.scrollY)
+    scrollArea.current = { top, bottom }
   }
+  // const updateCursor = useCallback((e) => {
+  //   // cursorY.current = e.delta.y
+  //   // const scrollOffset = Math.max(0, 80 - window.scrollY)
+  //   const position = e.delta.y + e.activatorEvent.touches[0].clientY
+  //   // console.log(`touch ${position} window ${window.scrollY} bottom ${bottom} top ${top}`)
+  //   cursorY.current = position;
+  //   // console.log(position, scrollArea.current.bottom)
+  //   console.log('cursor', e.delta.y)
+  //   if (cursorY.current > scrollArea.current.bottom - edge) {
+  //     scrollDownThrottle()
+  //   }
+  // }, [el, scrollArea])
+
   useEffect(() => {
     const onScroll = () => {
       scrollY.current = window.scrollY
       setupScrollArea()
     }
-    window.addEventListener('scroll', onScroll)
+    const onMoveCursor = (e) => {
+      cursorY.current = e.pageY
+      if (cursorY.current > scrollArea.current.bottom - edge) {
+        scrollDownThrottle()
+      }
 
-    return () => window.removeEventListener('scroll', onScroll)
+    }
+    window.addEventListener('scroll', onScroll)
+    window.addEventListener('pointermove', onMoveCursor)
+
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('pointermove', onMoveCursor)
+    }
   }, [])
   useEffect(() => {
     setupScrollArea()
   }, [windowWidth, windowHeight])
   useEffect(() => setupScrollArea(), [])
-  const updateCursor = useCallback((e) => {
-    // cursorY.current = e.delta.y
-    // const scrollOffset = Math.max(0, 80 - window.scrollY)
-    const position = e.delta.y + e.activatorEvent.touches[0].clientY
-    // console.log(`touch ${position} window ${window.scrollY} bottom ${bottom} top ${top}`)
-    cursorY.current = position;
-
-    console.log(`${position} ${scrollArea.top}x${scrollArea.bottom} percent ${(position - scrollArea.top) / (scrollArea.bottom - scrollArea.top)}`)
-  }, [el, scrollArea])
 
 
   return (
@@ -153,7 +177,7 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
       collisionDetection={closestCenter}
       onDragStart={onDragStart}
       autoScroll={false}
-      onDragMove={updateCursor}
+      // onDragMove={updateCursor}
       onDragEnd={onDragEnd}
       modifiers={isLarge ? [] : [restrictToVerticalAxis]}
     >

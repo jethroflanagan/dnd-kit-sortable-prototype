@@ -1,17 +1,23 @@
 import classNames from 'classnames';
 import styles from './GalleryImage.module.scss'
 import getClassNames from './getClassNames';
-const disableContextMenu = (e) => e.preventDefault();
+import { useSortable } from '@dnd-kit/sortable';
 export const GalleryImage = ({ item, active, ghost }) => {
+
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
 
   return (
     <div
       className={getClassNames(styles, 'wrapper', classNames({ active, ghost }))}
       key={item.src}
-      onContextMenu={disableContextMenu}
+      onContextMenu={() => { }}
     >
-      <img src={item.src} onContextMenu={disableContextMenu} className={styles.image} />
-      <div className={styles.handle} />
+      <img src={item.src} onContextMenu={() => { }} className={styles.image} />
+      <div className={styles.overlay} />
+      <div className={styles.handle}
+
+        {...listeners}
+      />
     </div >
   )
 }

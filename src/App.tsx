@@ -5,14 +5,11 @@ import throttle from 'lodash.throttle';
 import debounce from 'lodash.debounce';
 import {
   DndContext,
-  DragOverlay,
-  DropAnimation,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
   UniqueIdentifier,
   closestCenter,
-  defaultDropAnimation,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -24,12 +21,10 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy
 } from '@dnd-kit/sortable';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { GalleryImage } from './GalleryImage';
 import { SortableItem } from './SortableItem';
 import './style.css';
-import { createPortal } from 'react-dom';
-import { CSS } from '@dnd-kit/utilities';
 import { Overlay } from './Overlay';
 
 function SortablePhotos<T extends { id: UniqueIdentifier }>({
@@ -40,8 +35,6 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
   const EDGE = 100
   const [items, setItems] = useState<T[]>(initialItems);
   const [activeItem, setActiveItem] = useState(null);
-  const [isDragging, setDragging] = useState(false);
-  const { width: windowWidth, height: windowHeight } = useWindowSize()
   const scrollDirection = useRef(0)
   const el = useRef()
   const scrollAmount = useRef(0)
@@ -82,15 +75,15 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
   const debounceScroll = useCallback(debounce(() => {
     debounceScroll.cancel();
     if (scrollDirection.current) {
-      console.log(Date.now(), 'scroll')
       const speed = scrollAmount.current;
+
       window.scrollTo({
         top: window.scrollY + scrollDirection.current * speed,
         behavior: 'smooth'
       })
     }
     scroll()
-  }, 500));
+  }, 700));
 
   const scroll = useCallback(debounceScroll)
 
@@ -122,16 +115,13 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
   }, [activeItem])
 
   const setupSize = () => {
-
     const child = el.current?.querySelector('div:first-child')
-    scrollAmount.current = child.offsetHeight + 30; // gap
-    console.log('scroll', scrollAmount.current)
+    scrollAmount.current = child.offsetHeight + 30; // gap, hardcorded while testing
   }
+
   useEffect(() => {
     scroll()
   }, [])
-
-
 
   return (
     <DndContext
@@ -160,7 +150,6 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
     </DndContext>
   );
 }
-
 
 export default function App() {
   return (

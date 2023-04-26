@@ -10,8 +10,7 @@ export type SortableItemProps = {
 };
 
 export function SortableItem(props: SortableItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: props.id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: props.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -23,7 +22,6 @@ export function SortableItem(props: SortableItemProps) {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
       onContextMenu={() => { }}
     >
       {props.children}

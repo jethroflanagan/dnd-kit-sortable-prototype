@@ -14,10 +14,8 @@ export const GalleryImage = ({ item, active, ghost }) => {
     >
       <img src={item.src} onContextMenu={() => { }} className={styles.image} />
       <div className={styles.overlay} />
-      <div className={styles.handle}
-
-        {...listeners}
-      />
+      <div className={styles.handle} {...listeners} />
+      <div className={styles.fill} />
     </div >
   )
 }

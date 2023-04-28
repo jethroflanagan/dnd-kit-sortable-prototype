@@ -26,6 +26,8 @@ import { GalleryImage } from './GalleryImage';
 import { SortableItem } from './SortableItem';
 import './style.css';
 import { Overlay } from './Overlay';
+import getClassNames from './getClassNames';
+import classNames from 'classnames';
 
 function SortablePhotos<T extends { id: UniqueIdentifier }>({
   initialItems,
@@ -132,7 +134,7 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
       onDragEnd={onDragEnd}
       modifiers={isLarge ? [] : [restrictToVerticalAxis]}
     >
-      <div className="image-grid" onContextMenu={() => { }} ref={el}>
+      <div className={styles.imageGrid} onContextMenu={() => { }} ref={el}>
         <SortableContext
           items={items}
           strategy={

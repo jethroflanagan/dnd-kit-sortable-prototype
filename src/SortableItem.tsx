@@ -10,7 +10,7 @@ export type SortableItemProps = {
 };
 
 export function SortableItem(props: SortableItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: props.id });
+  const { attributes, setNodeRef, transform, transition } = useSortable({ id: props.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),

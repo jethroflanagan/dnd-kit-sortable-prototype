@@ -4,10 +4,40 @@
 .placeholder2 {
   height: 420px;
 }
+.imageGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  max-width: 1200px;
+@media (min-width: 700px) {
+    display: grid;
+    grid-template:
+      'primary primary secondary'
+      'primary primary tertiary';
+    gap: 0;
+    margin: 0 auto;
+}
+
+    &  > * {
+    transform-origin: top left;
+  }
+
+    &  > :nth-child(1) {
+    grid-area: primary;
+  }
+    &  > :nth-child(2) {
+    grid-area: secondary;
+  }
+    &  > :nth-child(3) {
+    grid-area: tertiary;
+  }
+
+
+}
 
 .scroll {
   // transform: translate3d(0, 0, 0.1px);
-
+  padding: 50px;
   // animation: scroll-up 3s linear infinite;
 }
 

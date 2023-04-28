@@ -1,0 +1,12 @@
+.overlay {
+  opacity: 0;
+  animation: show .2s ease-out forwards; // prevent flickering on creation
+}
+
+@keyframes show {
+   100% {
+    opacity: 1;
+    transform: translateY(-10px);
+  }
+}
+

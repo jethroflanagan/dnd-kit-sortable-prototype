@@ -1,8 +1,8 @@
-import { useMediaQuery, useWindowSize } from 'usehooks-ts';
-import styles from './App.module.scss'
-import { images } from './data';
-import throttle from 'lodash.throttle';
-import debounce from 'lodash.debounce';
+import { useMediaQuery, useWindowSize } from "usehooks-ts";
+import styles from "./App.module.scss";
+import { images } from "./data";
+import throttle from "lodash.throttle";
+import debounce from "lodash.debounce";
 import {
   DndContext,
   KeyboardSensor,
@@ -12,34 +12,34 @@ import {
   closestCenter,
   useSensor,
   useSensors,
-} from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   SortableContext,
   arrayMove,
   rectSwappingStrategy,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy
-} from '@dnd-kit/sortable';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { GalleryImage } from './GalleryImage';
-import { SortableItem } from './SortableItem';
-import './style.css';
-import { Overlay } from './Overlay';
-import getClassNames from './getClassNames';
-import classNames from 'classnames';
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { GalleryImage } from "./GalleryImage";
+import { SortableItem } from "./SortableItem";
+import "./style.css";
+import { Overlay } from "./Overlay";
+import getClassNames from "./getClassNames";
+import classNames from "classnames";
 
 function SortablePhotos<T extends { id: UniqueIdentifier }>({
   initialItems,
 }: {
   initialItems: T[];
 }) {
-  const EDGE = 100
+  const EDGE = 100;
   const [items, setItems] = useState<T[]>(initialItems);
   const [activeItem, setActiveItem] = useState(null);
-  const scrollDirection = useRef(0)
-  const el = useRef()
-  const scrollAmount = useRef(0)
+  const scrollDirection = useRef(0);
+  const el = useRef();
+  const scrollAmount = useRef(0);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
@@ -54,10 +54,10 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
     })
   );
 
-  const isLarge = useMediaQuery('(min-width: 700px)');
+  const isLarge = useMediaQuery("(min-width: 700px)");
 
   const onDragEnd = (event) => {
-    setActiveItem(null)
+    setActiveItem(null);
 
     scrollDirection.current = 0;
     const { active, over } = event;
@@ -69,29 +69,31 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
         return arrayMove(items, oldIndex, newIndex);
       });
     }
-  }
+  };
 
   const onDragStart = ({ active: { id } }) => {
     setActiveItem(items.find((item) => item.id === id));
-  }
-  const debounceScroll = useCallback(debounce(() => {
-    debounceScroll.cancel();
-    if (scrollDirection.current) {
-      const speed = scrollAmount.current;
+  };
+  const debounceScroll = useCallback(
+    debounce(() => {
+      debounceScroll.cancel();
+      if (scrollDirection.current) {
+        const speed = scrollAmount.current;
 
-      window.scrollTo({
-        top: window.scrollY + scrollDirection.current * speed,
-        behavior: 'smooth'
-      })
-    }
-    scroll()
-  }, 700));
+        window.scrollTo({
+          top: window.scrollY + scrollDirection.current * speed,
+          behavior: "smooth",
+        });
+      }
+      scroll();
+    }, 700)
+  );
 
-  const scroll = useCallback(debounceScroll)
+  const scroll = useCallback(debounceScroll);
 
   useEffect(() => {
     const preventScroll = (e) => {
-      e.preventDefault()
+      e.preventDefault();
 
       const cursorY = e.touches[0].clientY;
 
@@ -99,42 +101,40 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
         scrollDirection.current = -1;
       } else if (cursorY > window.innerHeight - EDGE) {
         scrollDirection.current = 1;
-      }
-      else {
+      } else {
         scrollDirection.current = 0;
       }
-    }
+    };
 
     if (activeItem != null) {
-      document.addEventListener('touchmove', preventScroll, { passive: false })
-      setupSize()
-    }
-    else {
-      document.removeEventListener('touchmove', preventScroll)
+      document.addEventListener("touchmove", preventScroll, { passive: false });
+      setupSize();
+    } else {
+      document.removeEventListener("touchmove", preventScroll);
     }
 
-    return () => document.removeEventListener('touchmove', preventScroll)
-  }, [activeItem])
+    return () => document.removeEventListener("touchmove", preventScroll);
+  }, [activeItem]);
 
   const setupSize = () => {
-    const child = el.current?.querySelector('div:first-child')
+    const child = el.current?.querySelector("div:first-child");
     scrollAmount.current = child.offsetHeight + 30; // gap, hardcorded while testing
-  }
+  };
 
-  useEffect(() => {
-    scroll()
-  }, [])
+  // useEffect(() => {
+  //   scroll()
+  // }, [])
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={onDragStart}
-      autoScroll={false}
+      autoScroll={true}
       onDragEnd={onDragEnd}
       modifiers={isLarge ? [] : [restrictToVerticalAxis]}
     >
-      <div className={styles.imageGrid} onContextMenu={() => { }} ref={el}>
+      <div className={styles.imageGrid} onContextMenu={() => {}} ref={el}>
         <SortableContext
           items={items}
           strategy={
@@ -155,7 +155,7 @@ function SortablePhotos<T extends { id: UniqueIdentifier }>({
 
 export default function App() {
   return (
-    <div onContextMenu={() => { }} className={styles.scroll}>
+    <div onContextMenu={() => {}} className={styles.scroll}>
       <div className={styles.placeholder} />
       <SortablePhotos initialItems={images} />
       <div className={styles.placeholder2} />
